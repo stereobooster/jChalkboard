@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+    <title></title>
+    <meta charset="UTF-8" />
+    <style>
+        #chalk {
+            margin:10px 0;
+        }
+        #chalk a {
+            border:1px solid #ddd;
+            background:#eee;
+            color:#777;
+            padding:0 10px;
+            text-decoration:none;
+        }
+        #chalk a:hover {
+            border:1px solid #aaa;
+            background:#ddd;
+            color:#903;
+            text-decoration:none;
+        }
+        #chalk canvas {
+            background:black;
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <h1>Chalkboard example</h1>
+    <a href="#" id="undo">undo</a>
+    <a href="#" id="redo">redo</a>
+    <a href="#" id="clear">clear</a>
+</div>
+
+<div id="chalk">
+    <canvas width="100%" height="800"></canvas>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="jquery.chalkboard.js"></script>
+<script>
+$(function(){
+    var $canvas = $("#chalk canvas");
+    $canvas.attr('width', $('#chalk').width())
+        .chalkboard();
+    $('#undo').bind('click',function(){
+        $canvas.chalkboard('undo');
+        return false;
+    });
+    $('#redo').bind('click',function(){
+        $canvas.chalkboard('redo');
+        return false;
+    });
+    $('#clear').bind('click',function(){
+        $canvas.chalkboard('clear');
+        return false;
+    });
+});
+</script>
+</body>
+</html>
+

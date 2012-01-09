@@ -6,8 +6,6 @@ Code based on [chalkboard-js](https://bitbucket.org/jlm/chalkboard-js) and [jQue
 
 ## Demo
 
-[Demo](http://stereobooster.github.com/jChalkboard)
-
 ## Usage
 
 Add jQuery and jSnowflakes
@@ -22,10 +20,7 @@ Add jQuery and jSnowflakes
 
 ## TODO
 
-  - size for sponge and chalks
   - detect canvas 
   	- fallback
-  	- css class `.nocanvas`
-  - save to file
   - demo page
   - jslint

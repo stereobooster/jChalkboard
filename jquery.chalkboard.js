@@ -1,5 +1,5 @@
 /**
- * jChalkboard v0.05
+ * jChalkboard v0.06
  * https://github.com/stereobooster/jChalkboard
  */
 
@@ -8,8 +8,11 @@
     var pluginName = "chalkboard",
         document = window.document,
         defaults = {
-            chalk: "rgba(255, 255, 255, .7)",
-            board: "rgba(5, 5, 5, 1)",
+            chalk_color: "rgba(255, 255, 255, .7)",
+            chalk_width: 7,
+            chalk_density: .4,
+            board_color: "rgba(5, 5, 5, 1)",
+            sponge_width: 40,
             interval: 50,
             optimize: true,
             save_url: "/image.php",
@@ -50,6 +53,9 @@
             this.height = ctx.canvas.height;
             this.ctx = ctx;
 
+            this.ctx.fillStyle = this.options.board_color;            
+            this.ctx.fillRect(0, 0, this.width, this.height);
+            
             this.set_brush();
 
             $("body").bind("mouseup", function (e) {
@@ -76,23 +82,30 @@
             });
         },
 
-        set_brush: function (brush, color) {
+        set_brush: function (brush, color, width) {
+            if (brush == "sponge" || brush == "brush_sponge") {
+                this.brush = "brush_sponge";
+                if (!color) {
+                    color = this.options.board_color;
+                }
+                if (!width) {
+                    width = this.options.sponge_width;
+                }
+            } else {
+                this.brush = "brush_chalk";
+                if (!color) {
+                    color = this.options.chalk_color;
+                }
+                if (!width) {
+                    width = this.options.chalk_width;
+                }
+            }
+            this.brush_width = width;
             this.set_brush_raw(brush, color);
             this.record_brush();
         },
 
         set_brush_raw: function (brush, color) {
-            if (brush == "sponge" || brush == "brush_sponge") {
-                this.brush = "brush_sponge";
-                if (!color) {
-                    color = this.options.board;
-                }
-            } else {
-                this.brush = "brush_chalk";
-                if (!color) {
-                    color = this.options.chalk;
-                }
-            }
             this.ctx.fillStyle = color;
             this.color = color;
         },
@@ -100,10 +113,14 @@
         record_brush: function () {
             if(this.record_flag){
                 var time = now() - this.start;
+                if (this.options.optimize) {
+                    time = Math.floor(time / this.options.interval); 
+                }
                 this.record_story.push([
                     time,
                     this.brush,
-                    this.color
+                    this.color,
+                    this.brush_width
                     ]);
             }
         },
@@ -134,6 +151,7 @@
                 row = record[i],
                 that = this,
                 brush,
+                width,
                 animation,
                 interval;
 
@@ -152,11 +170,12 @@
                             record_time = record_time * interval;
                         }
                         if(record_time < time) {
-                            if (row.length == 3) {
+                            if (row.length == 4) {
                                 brush = row[1];
+                                width = row[3];
                                 that.set_brush_raw(row[1], row[2]);
                             } else {
-                                that.draw_raw(row[1], row[2], row[3], row[4], brush);
+                                that.draw_raw(row[1], row[2], row[3], row[4], brush, width);
                             }
                             i++;
                         } else {
@@ -215,7 +234,7 @@
         },
 
         draw: function (x, y) {
-            this.draw_raw(x, y, this.last_x, this.last_y, this.brush);
+            this.draw_raw(x, y, this.last_x, this.last_y, this.brush, this.brush_width);
             if (this.record_flag) {
                 var time = now() - this.start;
                 if (this.options.optimize) {
@@ -231,38 +250,39 @@
             this.last_y = y;
         },
 
-        draw_raw: function (x, y, last_x, last_y, brush) {
+        draw_raw: function (x, y, last_x, last_y, brush, width) {
             if (last_x & last_y){
-                var dx = last_x-x,
-                dy = last_y-y,
-                d = Math.abs(dx)+Math.abs(dy),
-                n = Math.ceil(Math.abs(d)/4),
-                i, nx, ny;
-                for (i=0; i<n; i++){
-                    nx = x+dx*(i/n);
-                    ny = y+dy*(i/n);
-                    (this[brush])(nx, ny, 7);
+                var dx = last_x - x,
+                    dy = last_y - y,
+                    d = Math.abs(dx) + Math.abs(dy),
+                    n = Math.ceil(Math.abs(d)/4),
+                    i, nx, ny;
+                for (i = 0; i < n; i++){
+                    nx = x + dx*(i/n);
+                    ny = y + dy*(i/n);
+                    (this[brush])(nx, ny, width);
                 }
             } else {
-                (this[brush])(nx, ny, 7);
+                (this[brush])(nx, ny, width);
             }
         },
 
-        brush_chalk:function(x,y,w){
-            var i, nx, ny, d;
-            for (i=0; i<20; i++){
-                nx = Math.random()*w-w/2;
-                ny = Math.random()*w-w/2;
-                d = (nx+ny)/w;
-                nx = Math.ceil(nx-d + x);
-                ny = Math.ceil(ny-d + y);
-                this.ctx.fillRect(nx,ny,1,1);
+        brush_chalk: function(x, y, w) {
+            var i, nx, ny, d,
+                i_max = Math.ceil(w*w*this.options.chalk_density);
+            for (i = 0; i < i_max; i++){
+                nx = Math.random()*w - w/2;
+                ny = Math.random()*w - w/2;
+                d = (nx + ny)/w;
+                nx = Math.ceil(nx - d + x);
+                ny = Math.ceil(ny - d + y);
+                this.ctx.fillRect(nx, ny, 1, 1);
             }
         },
 
-        brush_sponge:function(x,y,w){
+        brush_sponge: function(x, y, w) {
             this.ctx.beginPath();
-            this.ctx.arc(x, y, 10, 0, Math.PI*2, true); 
+            this.ctx.arc(x, y, Math.ceil(w/2), 0, Math.PI*2, true); 
             this.ctx.closePath();
             this.ctx.fill();
         },
@@ -275,7 +295,7 @@
                 data: {
                     data: data,
                     file: this.options.save_file_name
-                }
+                },
                 type: "POST"
             })
         },
@@ -288,7 +308,7 @@
 
     }
 
-    $.fn[pluginName] = function ( command, options ) {
+    $.fn[pluginName] = function ( command, options, width ) {
         return this.each(function () {
             var plug = $.data(this, "plugin_" + pluginName);
             if (!plug) {
@@ -302,9 +322,9 @@
             } else if (command == "clear") {
                 plug.clear_to_undo();
             } else if (command == "chalk") {
-                plug.set_brush(command, options);
+                plug.set_brush(command, options, width);
             } else if (command == "sponge") {
-                plug.set_brush(command);
+                plug.set_brush(command, undefined, options);
             } else if (command == "record") {
                 plug.record();
             } else if (command == "stop") {

@@ -3,14 +3,6 @@
 <head>
     <title></title>
     <meta charset="UTF-8" />
-    <style>
-        #chalk_board {
-            margin:10px 0;
-        }
-        #chalk_board canvas {
-            background:black;
-        }
-    </style>
 </head>
 <body>
 
@@ -56,7 +48,7 @@ $(function(){
         return false;
     });
     $('#chalk_yellow').bind('click',function(){
-        $canvas.chalkboard('chalk', "rgba(255, 255, 0, .7)");
+        $canvas.chalkboard('chalk', "rgba(255, 255, 0, .7)", 5);
         return false;
     });
     $('#sponge').bind('click',function(){
@@ -75,7 +67,7 @@ $(function(){
         e.stopPropagation();
         var a = {};
         $canvas.chalkboard('stop', a);
-        //console.info(JSON.stringify(a.record));
+        console.info(JSON.stringify(a.record));
         return false;
     });
     $('#play').bind('click',function(e){

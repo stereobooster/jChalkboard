@@ -21,6 +21,9 @@
     <a href="#" id="clear">clear</a>
     <a href="#" id="chalk">chalk</a>
     <a href="#" id="sponge">sponge</a>
+    <a href="#" id="record">record</a>
+    <a href="#" id="stop">stop</a>
+    <a href="#" id="play">play</a>
 </div>
 
 <div id="chalk_board">
@@ -52,6 +55,21 @@ $(function(){
     });
     $('#sponge').bind('click',function(){
         $canvas.chalkboard('sponge');
+        return false;
+    });
+
+    $('#record').bind('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        $canvas.chalkboard('record');
+        return false;
+    });
+    $('#stop').bind('click',function(){
+        $canvas.chalkboard('stop');
+        return false;
+    });
+    $('#play').bind('click',function(){
+        $canvas.chalkboard('play');
         return false;
     });
 });

@@ -1,5 +1,5 @@
 /**
- * jChalkboard v0.02
+ * jChalkboard v0.03
  * https://github.com/stereobooster/jChalkboard
  */
 
@@ -20,6 +20,10 @@
         this._name = pluginName;
         
         this.init();
+    }
+
+    function now(){
+        return (new Date).getTime();
     }
 
     Plugin.prototype = {
@@ -68,13 +72,49 @@
         },
 
         set_brush: function (brush) {
-            if (brush == 'sponge') {
+            if (brush == 'sponge' || brush == 'brush_sponge') {
                 this.brush = 'brush_sponge';
                 this.ctx.fillStyle = this.options.board;
             } else {
                 this.brush = 'brush_chalk';
                 this.ctx.fillStyle = this.options.chalk;
             }
+        },
+
+        record: function () {
+            this.start = now();
+            this.record_flag = true;
+            this.record_story = [];
+        },
+
+        record_stop: function () {
+            this.record_flag = false;
+            //console.info(this.record_story);
+        },
+
+        play: function () {
+            var start_animation = now(),
+            time,
+            row,
+            i = 0,
+            record = this.record_story,
+            that = this,
+            interval = setInterval(function(){
+                time = now() - start_animation;
+                while (true) {
+                    row = record[i];
+                    if(row && row[0] < time) {
+                        that.set_brush(row[5])
+                        that.raw_draw(row[1], row[2], row[3], row[4], row[5])
+                        i++;
+                        if (i >= record.length){
+                            clearInterval(interval);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }, 20);
         },
 
         clear_ui:function(){
@@ -116,23 +156,36 @@
             }
         },
 
-        draw:function(x, y){
-            if (this.last_x & this.last_y){
-                var dx = this.last_x-x,
-                dy = this.last_y-y,
+        draw: function (x, y) {
+            this.raw_draw(x, y, this.last_x, this.last_y, this.brush);
+            if(this.record_flag){
+                var time = now() - this.start;
+                this.record_story.push([
+                    time,
+                    this.last_x, this.last_y,
+                    x, y,
+                    this.brush
+                    ]);
+            }
+            this.last_x = x;
+            this.last_y = y;
+        },
+
+        raw_draw: function (x, y, last_x, last_y, brush) {
+            if (last_x & last_y){
+                var dx = last_x-x,
+                dy = last_y-y,
                 d = Math.abs(dx)+Math.abs(dy),
                 n = Math.ceil(Math.abs(d)/4),
                 i, nx, ny;
                 for (i=0; i<n; i++){
                     nx = x+dx*(i/n);
                     ny = y+dy*(i/n);
-                    (this[this.brush])(nx, ny, 7);
+                    (this[brush])(nx, ny, 7);
                 }
             } else {
-                (this[this.brush])(nx, ny, 7);
+                (this[brush])(nx, ny, 7);
             }
-            this.last_x = x;
-            this.last_y = y;
         },
 
         brush_chalk:function(x,y,w){
@@ -173,6 +226,12 @@
                 plug.set_brush(options);
             } else if (options == "sponge") {
                 plug.set_brush(options);
+            } else if (options == "record") {
+                plug.record();
+            } else if (options == "stop") {
+                plug.record_stop();
+            } else if (options == "play") {
+                plug.play();
             }
         });
     }

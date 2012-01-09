@@ -22,9 +22,11 @@ Add jQuery and jSnowflakes
 
 ## TODO
 
-  - jslint
+  - save record story to external variable / set record story from external variable
+  - colors for chalks
   - detect canvas 
-  	- fallback 
+  	- fallback
   	- css class `.nocanvas`
   - save to file
-  - record/play
+  - demo page
+  - jslint

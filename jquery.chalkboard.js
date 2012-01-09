@@ -1,5 +1,5 @@
 /**
- * jChalkboard v0.03
+ * jChalkboard v0.04
  * https://github.com/stereobooster/jChalkboard
  */
 
@@ -8,7 +8,9 @@
     var pluginName = "chalkboard",
         defaults = {
             chalk: "rgba(255, 255, 255, .7)",
-            board: "rgba(5, 5, 5, 1)"
+            board: "rgba(5, 5, 5, 1)",
+            interval: 50,
+            optimize: true
         };
 
     function Plugin( element, options ) {
@@ -71,13 +73,35 @@
             });
         },
 
-        set_brush: function (brush) {
+        set_brush: function (brush, color) {
+            this.set_brush_raw(brush, color);
+            this.record_brush();
+        },
+
+        set_brush_raw: function (brush, color) {
             if (brush == 'sponge' || brush == 'brush_sponge') {
                 this.brush = 'brush_sponge';
-                this.ctx.fillStyle = this.options.board;
+                if (!color) {
+                    color = this.options.board;
+                }
             } else {
                 this.brush = 'brush_chalk';
-                this.ctx.fillStyle = this.options.chalk;
+                if (!color) {
+                    color = this.options.chalk;
+                }
+            }
+            this.ctx.fillStyle = color;
+            this.color = color;
+        },
+        
+        record_brush: function () {
+            if(this.record_flag){
+                var time = now() - this.start;
+                this.record_story.push([
+                    time,
+                    this.brush,
+                    this.color
+                    ]);
             }
         },
 
@@ -85,36 +109,67 @@
             this.start = now();
             this.record_flag = true;
             this.record_story = [];
+            if (this.options.optimize) {
+                this.record_story = [[this.options.interval]];
+            }
+            this.record_brush();
         },
 
         record_stop: function () {
             this.record_flag = false;
-            //console.info(this.record_story);
+            return this.record_story;
         },
 
-        play: function () {
+        play: function (record) {
+            if (!record) {
+                record = this.record_story;
+            }
             var start_animation = now(),
-            time,
-            row,
-            i = 0,
-            record = this.record_story,
-            that = this,
-            interval = setInterval(function(){
+                time,
+                record_time,
+                i = 0,
+                row = record[i],
+                that = this,
+                brush,
+                animation,
+                interval;
+
+            if (row && row.length == 1) {
+                 interval = row[0];
+                 i++;
+            }
+
+            animation = function () {
                 time = now() - start_animation;
                 while (true) {
                     row = record[i];
-                    if(row && row[0] < time) {
-                        that.set_brush(row[5])
-                        that.raw_draw(row[1], row[2], row[3], row[4], row[5])
-                        i++;
-                        if (i >= record.length){
-                            clearInterval(interval);
+                    if (row) {
+                        record_time = row[0]; 
+                        if (interval) {
+                            record_time = record_time * interval;
                         }
-                    } else {
-                        break;
+                        if(record_time < time) {
+                            if (row.length == 3) {
+                                brush = row[1];
+                                that.set_brush_raw(row[1], row[2]);
+                            } else {
+                                that.draw_raw(row[1], row[2], row[3], row[4], brush);
+                            }
+                            i++;
+                        } else {
+                            if (i < record.length){
+                                setTimeout(animation, interval ? interval : that.options.interval);
+                            }
+                            break;
+                        }
+                        if (i >= record.length) {
+                            break;
+                        }
                     }
                 }
-            }, 20);
+            };
+
+            animation();
         },
 
         clear_ui:function(){
@@ -157,21 +212,23 @@
         },
 
         draw: function (x, y) {
-            this.raw_draw(x, y, this.last_x, this.last_y, this.brush);
-            if(this.record_flag){
+            this.draw_raw(x, y, this.last_x, this.last_y, this.brush);
+            if (this.record_flag) {
                 var time = now() - this.start;
+                if (this.options.optimize) {
+                    time = Math.floor(time / this.options.interval); 
+                }
                 this.record_story.push([
                     time,
                     this.last_x, this.last_y,
-                    x, y,
-                    this.brush
+                    x, y
                     ]);
             }
             this.last_x = x;
             this.last_y = y;
         },
 
-        raw_draw: function (x, y, last_x, last_y, brush) {
+        draw_raw: function (x, y, last_x, last_y, brush) {
             if (last_x & last_y){
                 var dx = last_x-x,
                 dy = last_y-y,
@@ -209,29 +266,33 @@
 
     }
 
-    $.fn[pluginName] = function ( options ) {
+    $.fn[pluginName] = function ( command, options ) {
         return this.each(function () {
             var plug = $.data(this, "plugin_" + pluginName);
             if (!plug) {
-                plug = new Plugin( this, options );
+                plug = new Plugin( this, command );
                 $.data(this, "plugin_" + pluginName, plug);
             }
-            if (options == "undo"){
+            if (command == "undo"){
                 plug.undo();
-            } else if (options == "redo") {
+            } else if (command == "redo") {
                 plug.redo();
-            } else if (options == "clear") {
+            } else if (command == "clear") {
                 plug.clear_to_undo();
-            } else if (options == "chalk") {
-                plug.set_brush(options);
-            } else if (options == "sponge") {
-                plug.set_brush(options);
-            } else if (options == "record") {
+            } else if (command == "chalk") {
+                plug.set_brush(command, options);
+            } else if (command == "sponge") {
+                plug.set_brush(command);
+            } else if (command == "record") {
                 plug.record();
-            } else if (options == "stop") {
-                plug.record_stop();
-            } else if (options == "play") {
-                plug.play();
+            } else if (command == "stop") {
+                if (options) {
+                    options.record = plug.record_stop();
+                } else {
+                    plug.record_stop();
+                }
+            } else if (command == "play") {
+                plug.play(options);
             }
         });
     }

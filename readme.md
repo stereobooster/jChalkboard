@@ -22,8 +22,8 @@ Add jQuery and jSnowflakes
 
 ## TODO
 
-  - save record story to external variable / set record story from external variable
-  - colors for chalks
+  - save to file
+  - size for sponge and chalks
   - detect canvas 
   	- fallback
   	- css class `.nocanvas`

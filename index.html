@@ -20,6 +20,7 @@
     <a href="#" id="redo">redo</a>
     <a href="#" id="clear">clear</a>
     <a href="#" id="chalk">chalk</a>
+    <a href="#" id="chalk_yellow">yellow chalk</a>
     <a href="#" id="sponge">sponge</a>
     <a href="#" id="record">record</a>
     <a href="#" id="stop">stop</a>
@@ -53,6 +54,10 @@ $(function(){
         $canvas.chalkboard('chalk');
         return false;
     });
+    $('#chalk_yellow').bind('click',function(){
+        $canvas.chalkboard('chalk', "rgba(255, 255, 0, .7)");
+        return false;
+    });
     $('#sponge').bind('click',function(){
         $canvas.chalkboard('sponge');
         return false;
@@ -64,11 +69,17 @@ $(function(){
         $canvas.chalkboard('record');
         return false;
     });
-    $('#stop').bind('click',function(){
-        $canvas.chalkboard('stop');
+    $('#stop').bind('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var a = {};
+        $canvas.chalkboard('stop', a);
+        //console.info(JSON.stringify(a.record));
         return false;
     });
-    $('#play').bind('click',function(){
+    $('#play').bind('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
         $canvas.chalkboard('play');
         return false;
     });

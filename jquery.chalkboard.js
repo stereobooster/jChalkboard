@@ -1,16 +1,19 @@
 /**
- * jChalkboard v0.04
+ * jChalkboard v0.05
  * https://github.com/stereobooster/jChalkboard
  */
 
-;(function ( $, undefined ) {
+;(function ( $, window, undefined ) {
 
     var pluginName = "chalkboard",
+        document = window.document,
         defaults = {
             chalk: "rgba(255, 255, 255, .7)",
             board: "rgba(5, 5, 5, 1)",
             interval: 50,
-            optimize: true
+            optimize: true,
+            save_url: "/image.php",
+            save_file_name: false
         };
 
     function Plugin( element, options ) {
@@ -79,13 +82,13 @@
         },
 
         set_brush_raw: function (brush, color) {
-            if (brush == 'sponge' || brush == 'brush_sponge') {
-                this.brush = 'brush_sponge';
+            if (brush == "sponge" || brush == "brush_sponge") {
+                this.brush = "brush_sponge";
                 if (!color) {
                     color = this.options.board;
                 }
             } else {
-                this.brush = 'brush_chalk';
+                this.brush = "brush_chalk";
                 if (!color) {
                     color = this.options.chalk;
                 }
@@ -262,6 +265,25 @@
             this.ctx.arc(x, y, 10, 0, Math.PI*2, true); 
             this.ctx.closePath();
             this.ctx.fill();
+        },
+
+        save_to_file: function() {
+            // var data = this.element.toDataURL("image/png");
+            // document.location.href = data.replace("image/png", "image/octet-stream");
+            $.ajax({
+                url: this.options.save_url,
+                data: {
+                    data: data,
+                    file: this.options.save_file_name
+                }
+                type: "POST"
+            })
+        },
+
+        canvas_supported: function() {
+            var canvas = document.createElement("canvas");
+            return !!canvas.getContext("2d");
+            //!!canvas.toDataURL;
         }
 
     }
@@ -293,8 +315,10 @@
                 }
             } else if (command == "play") {
                 plug.play(options);
+            } else if (command == "save") {
+                plug.save_to_file();
             }
         });
     }
 
-})(jQuery);
+})(jQuery, window);

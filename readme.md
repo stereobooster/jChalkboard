@@ -22,7 +22,6 @@ Add jQuery and jSnowflakes
 
 ## TODO
 
-  - save to file
   - size for sponge and chalks
   - detect canvas 
   	- fallback

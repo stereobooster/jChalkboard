@@ -25,6 +25,7 @@
     <a href="#" id="record">record</a>
     <a href="#" id="stop">stop</a>
     <a href="#" id="play">play</a>
+    <a href="#" id="save">save</a>
 </div>
 
 <div id="chalk_board">
@@ -81,6 +82,13 @@ $(function(){
         e.preventDefault();
         e.stopPropagation();
         $canvas.chalkboard('play');
+        return false;
+    });
+
+    $('#save').bind('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        $canvas.chalkboard('save');
         return false;
     });
 });

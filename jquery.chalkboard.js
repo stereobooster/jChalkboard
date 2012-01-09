@@ -1,5 +1,5 @@
 /**
- * jChalkboard v0.01
+ * jChalkboard v0.02
  * https://github.com/stereobooster/jChalkboard
  */
 
@@ -7,7 +7,8 @@
 
     var pluginName = "chalkboard",
         defaults = {
-            chalk: "rgba(255, 255, 255, .7)"
+            chalk: "rgba(255, 255, 255, .7)",
+            board: "rgba(5, 5, 5, 1)"
         };
 
     function Plugin( element, options ) {
@@ -30,15 +31,17 @@
         height: undefined,
         undo_history: [],
         redo_history: [],
+        brush: undefined,
 
         init: function () {
 
             var that = this,
             ctx = this.element.getContext("2d");
-            ctx.fillStyle = this.options.chalk;
             this.width = ctx.canvas.width;
             this.height = ctx.canvas.height;
             this.ctx = ctx;
+
+            this.set_brush();
 
             $("body").bind("mouseup", function (e) {
                 that.clear_ui();
@@ -62,6 +65,16 @@
                 y = e.pageY - that.element.offsetTop;
                 that.draw(x,y);
             });
+        },
+
+        set_brush: function (brush) {
+            if (brush == 'sponge') {
+                this.brush = 'brush_sponge';
+                this.ctx.fillStyle = this.options.board;
+            } else {
+                this.brush = 'brush_chalk';
+                this.ctx.fillStyle = this.options.chalk;
+            }
         },
 
         clear_ui:function(){
@@ -113,16 +126,16 @@
                 for (i=0; i<n; i++){
                     nx = x+dx*(i/n);
                     ny = y+dy*(i/n);
-                    this.brush_chulk(nx, ny, 7);
+                    (this[this.brush])(nx, ny, 7);
                 }
             } else {
-                this.brush_chulk(x, y, 7);
+                (this[this.brush])(nx, ny, 7);
             }
             this.last_x = x;
             this.last_y = y;
         },
 
-        brush_chulk:function(x,y,w){
+        brush_chalk:function(x,y,w){
             var i, nx, ny, d;
             for (i=0; i<20; i++){
                 nx = Math.random()*w-w/2;
@@ -132,6 +145,13 @@
                 ny = Math.ceil(ny-d + y);
                 this.ctx.fillRect(nx,ny,1,1);
             }
+        },
+
+        brush_sponge:function(x,y,w){
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 10, 0, Math.PI*2, true); 
+            this.ctx.closePath();
+            this.ctx.fill();
         }
 
     }
@@ -149,6 +169,10 @@
                 plug.redo();
             } else if (options == "clear") {
                 plug.clear_to_undo();
+            } else if (options == "chalk") {
+                plug.set_brush(options);
+            } else if (options == "sponge") {
+                plug.set_brush(options);
             }
         });
     }

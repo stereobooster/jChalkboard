@@ -23,5 +23,8 @@ Add jQuery and jSnowflakes
 ## TODO
 
   - jslint
-  - sponge
-  - 
+  - detect canvas 
+  	- fallback 
+  	- css class `.nocanvas`
+  - save to file
+  - record/play

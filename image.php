@@ -8,6 +8,7 @@ if ($data) {
 	if (!$file) {
 		$file = str_replace('/', '.', $mime_type);
 	}
+
 	@header('Content-type: '.$mime_type);
 	@header('Content-Disposition: attachment; filename="'.$file.'"');
 	@header('Content-Transfer-Encoding: binary');
@@ -16,5 +17,6 @@ if ($data) {
 	@header('Cache-control: private');
 	@header('Pragma: private');
 	@header('Expires: Mon, 26 Jul 1997 05:00:00 GMT')
-	echo base64_decode($data);
+
+	echo base64_decode(str_replace(' ', '+', $data));
 }

@@ -20,9 +20,10 @@ Add jQuery and jSnowflakes
 
 ## Canvas fallback
 
-	[https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills#Canvas]
+[https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills#Canvas]
 
 ## TODO
 
   - demo page
   - jslint
+  - rack application as alternative to php script

@@ -20,7 +20,7 @@ Add jQuery and jSnowflakes
 
 ## Canvas fallback
 
-[https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills#Canvas]
+https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills
 
 ## TODO
 

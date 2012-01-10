@@ -1,5 +1,5 @@
 /**
- * jChalkboard v0.06
+ * jChalkboard v0.07
  * https://github.com/stereobooster/jChalkboard
  */
 
@@ -47,44 +47,51 @@
 
         init: function () {
 
-            var that = this,
-            ctx = this.element.getContext("2d");
-            this.width = ctx.canvas.width;
-            this.height = ctx.canvas.height;
-            this.ctx = ctx;
+            this.canvas_support_test();
 
-            this.ctx.fillStyle = this.options.board_color;            
-            this.ctx.fillRect(0, 0, this.width, this.height);
-            
-            this.set_brush();
+            if (!this.canvas) {
+                this.element.addclass('no-canvas');
+            } else {
+                var that = this,
+                    ctx = this.element.getContext("2d");
+                    this.width = ctx.canvas.width;
+                    this.height = ctx.canvas.height;
 
-            $("body").bind("mouseup", function (e) {
-                that.clear_ui();
-            });
+                ctx.fillStyle = this.options.board_color;            
+                ctx.fillRect(0, 0, this.width, this.height);
+                this.ctx = ctx;            
 
-            $(this.element).bind("mousedown", function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                that.mouse_down = true;
-                that.save();
-            }).bind("mouseleave", function () {
-                that.last_x = undefined;  
-                that.last_y = undefined;  
-            }).bind("mousemove", function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!that.mouse_down){
-                    return;
-                }
-                var x = e.pageX - that.element.offsetLeft,
-                y = e.pageY - that.element.offsetTop;
-                that.draw(x,y);
-            });
+                this.set_brush();
+
+                $("body").bind("mouseup", function (e) {
+                    that.clear_ui();
+                });
+
+                $(this.element).bind("mousedown", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    that.mouse_down = true;
+                    that.save();
+                }).bind("mouseleave", function () {
+                    that.last_x = undefined;  
+                    that.last_y = undefined;  
+                }).bind("mousemove", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!that.mouse_down){
+                        return;
+                    }
+                    var x = e.pageX - that.element.offsetLeft,
+                        y = e.pageY - that.element.offsetTop;
+                    that.draw(x,y);
+                });                
+            }
+
         },
 
         set_brush: function (brush, color, width) {
             if (brush == "sponge" || brush == "brush_sponge") {
-                this.brush = "brush_sponge";
+                brush = "brush_sponge";
                 if (!color) {
                     color = this.options.board_color;
                 }
@@ -92,7 +99,7 @@
                     width = this.options.sponge_width;
                 }
             } else {
-                this.brush = "brush_chalk";
+                brush = "brush_chalk";
                 if (!color) {
                     color = this.options.chalk_color;
                 }
@@ -100,17 +107,10 @@
                     width = this.options.chalk_width;
                 }
             }
+            this.brush = brush;
             this.brush_width = width;
-            this.set_brush_raw(brush, color);
-            this.record_brush();
-        },
-
-        set_brush_raw: function (brush, color) {
-            this.ctx.fillStyle = color;
-            this.color = color;
-        },
-        
-        record_brush: function () {
+            //this.color = color;
+            this.set_brush_raw(color);
             if(this.record_flag){
                 var time = now() - this.start;
                 if (this.options.optimize) {
@@ -118,11 +118,15 @@
                 }
                 this.record_story.push([
                     time,
-                    this.brush,
-                    this.color,
-                    this.brush_width
+                    color,
+                    brush,
+                    brush_width
                     ]);
             }
+        },
+
+        set_brush_raw: function (color) {
+            this.ctx.fillStyle = color;
         },
 
         record: function () {
@@ -171,9 +175,9 @@
                         }
                         if(record_time < time) {
                             if (row.length == 4) {
-                                brush = row[1];
+                                that.set_brush_raw(row[1]);
+                                brush = row[2];
                                 width = row[3];
-                                that.set_brush_raw(row[1], row[2]);
                             } else {
                                 that.draw_raw(row[1], row[2], row[3], row[4], brush, width);
                             }
@@ -300,10 +304,10 @@
             })
         },
 
-        canvas_supported: function() {
+        canvas_support_test: function() {
             var canvas = document.createElement("canvas");
-            return !!canvas.getContext("2d");
-            //!!canvas.toDataURL;
+            this.canvas = !!(canvas.getContext && canvas.getContext("2d"));
+            this.toDataURL = !!canvas.toDataURL;
         }
 
     }

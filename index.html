@@ -24,13 +24,16 @@
     <canvas width="100%" height="800"></canvas>
 </div>
 
+<!--[if lt IE 9]><script src="http://code.google.com/p/explorercanvas/source/browse/trunk/excanvas.js"></script><![endif]-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script src="jquery.chalkboard.js"></script>
 <script>
 $(function(){
     var $canvas = $("#chalk_board canvas");
     $canvas.attr('width', $('#chalk_board').width())
-        .chalkboard();
+        .chalkboard({
+            board_color: '#244b1c'
+        });
     $('#undo').bind('click',function(){
         $canvas.chalkboard('undo');
         return false;

@@ -18,9 +18,11 @@ Add jQuery and jSnowflakes
 ```javascript
 ```
 
+## Canvas fallback
+
+	[https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills#Canvas]
+
 ## TODO
 
-  - detect canvas 
-  	- fallback
   - demo page
   - jslint

@@ -1,5 +1,5 @@
 /**
- * jChalkboard v0.07
+ * jChalkboard v0.08
  * https://github.com/stereobooster/jChalkboard
  */
 
@@ -50,12 +50,13 @@
             this.canvas_support_test();
 
             if (!this.canvas) {
-                this.element.addclass('no-canvas');
+                this.element.addclass("no-canvas");
             } else {
                 var that = this,
                     ctx = this.element.getContext("2d");
-                    this.width = ctx.canvas.width;
-                    this.height = ctx.canvas.height;
+
+                this.width = ctx.canvas.width;
+                this.height = ctx.canvas.height;
 
                 ctx.fillStyle = this.options.board_color;            
                 ctx.fillRect(0, 0, this.width, this.height);
@@ -109,18 +110,25 @@
             }
             this.brush = brush;
             this.brush_width = width;
-            //this.color = color;
+            this.color = color;
             this.set_brush_raw(color);
+            this.record_brush();
+        },
+
+        record_brush: function(){
             if(this.record_flag){
+                if (!this.start) {
+                    this.start = now();
+                }
                 var time = now() - this.start;
                 if (this.options.optimize) {
                     time = Math.floor(time / this.options.interval); 
                 }
                 this.record_story.push([
                     time,
-                    color,
-                    brush,
-                    brush_width
+                    this.color,
+                    this.brush,
+                    this.brush_width
                     ]);
             }
         },
@@ -130,8 +138,8 @@
         },
 
         record: function () {
-            this.start = now();
-            this.record_flag = true;
+            this.start = undefined;
+            this.record_flag = 1;
             this.record_story = [];
             if (this.options.optimize) {
                 this.record_story = [[this.options.interval]];
@@ -140,7 +148,7 @@
         },
 
         record_stop: function () {
-            this.record_flag = false;
+            this.record_flag = undefined;
             return this.record_story;
         },
 
@@ -183,7 +191,7 @@
                             }
                             i++;
                         } else {
-                            if (i < record.length){
+                            if (i < record.length) {
                                 setTimeout(animation, interval ? interval : that.options.interval);
                             }
                             break;
@@ -195,7 +203,9 @@
                 }
             };
 
-            animation();
+            if (record.length > i) {
+                animation();   
+            }
         },
 
         clear_ui:function(){
@@ -207,7 +217,11 @@
         clear_to_undo:function(){
             var d = this.ctx.getImageData(0,0,this.width, this.height);    
             this.undo_history.unshift(d);
-            this.ctx.clearRect(0,0,this.width,this.height);
+
+            var color = this.ctx.fillStyle;
+            this.ctx.fillStyle = this.options.board_color;            
+            this.ctx.fillRect(0, 0, this.width, this.height);
+            this.ctx.fillStyle = color;
         },
 
         save:function(){
@@ -238,8 +252,11 @@
         },
 
         draw: function (x, y) {
-            this.draw_raw(x, y, this.last_x, this.last_y, this.brush, this.brush_width);
+            this.draw_raw(this.last_x, this.last_y, x, y, this.brush, this.brush_width);
             if (this.record_flag) {
+                if (!this.start) {
+                    this.start = now();
+                }
                 var time = now() - this.start;
                 if (this.options.optimize) {
                     time = Math.floor(time / this.options.interval); 
@@ -254,8 +271,8 @@
             this.last_y = y;
         },
 
-        draw_raw: function (x, y, last_x, last_y, brush, width) {
-            if (last_x & last_y){
+        draw_raw: function (last_x, last_y, x, y, brush, width) {
+            if (last_x && last_y){
                 var dx = last_x - x,
                     dy = last_y - y,
                     d = Math.abs(dx) + Math.abs(dy),

@@ -14,9 +14,12 @@
             board_color: "rgba(5, 5, 5, 1)",
             sponge_width: 40,
             interval: 50,
-            optimize: true,
+            optimize: 1,
             save_url: "/image.php",
-            save_file_name: false
+            save_file_name: 0
+        },
+        now = function () {
+            return (new Date).getTime();
         };
 
     function Plugin( element, options ) {
@@ -30,12 +33,8 @@
         this.init();
     }
 
-    function now(){
-        return (new Date).getTime();
-    }
-
     Plugin.prototype = {
-        mouse_down: false,
+        mouse_down: 0,
         last_x: undefined,
         last_y: undefined,
         ctx: undefined,
@@ -71,7 +70,7 @@
                 $(this.element).bind("mousedown", function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    that.mouse_down = true;
+                    that.mouse_down = 1;
                     that.save();
                 }).bind("mouseleave", function () {
                     that.last_x = undefined;  
@@ -145,10 +144,11 @@
                 this.record_story = [[this.options.interval]];
             }
             this.record_brush();
+            this.start = undefined; //start record timer from first user action
         },
 
         record_stop: function () {
-            this.record_flag = undefined;
+            this.record_flag = 0;
             return this.record_story;
         },
 
@@ -174,7 +174,7 @@
 
             animation = function () {
                 time = now() - start_animation;
-                while (true) {
+                while (1) {
                     row = record[i];
                     if (row) {
                         record_time = row[0]; 
@@ -211,11 +211,11 @@
         clear_ui:function(){
             this.last_x = undefined;
             this.last_y = undefined;
-            this.mouse_down = false;
+            this.mouse_down = 0;
         },
 
         clear_to_undo:function(){
-            var d = this.ctx.getImageData(0,0,this.width, this.height);    
+            var d = this.ctx.getImageData(0, 0, this.width, this.height);    
             this.undo_history.unshift(d);
 
             var color = this.ctx.fillStyle;
@@ -225,7 +225,7 @@
         },
 
         save:function(){
-            var d = this.ctx.getImageData(0,0,this.width, this.height);    
+            var d = this.ctx.getImageData(0, 0, this.width, this.height);    
             this.undo_history.unshift(d);
             this.redo_history = [];
         },
@@ -233,10 +233,10 @@
         undo:function(){
             this.clear_ui();
             if (this.undo_history.length > 0){
-                var d = this.ctx.getImageData(0,0,this.width, this.height);    
+                var d = this.ctx.getImageData(0, 0, this.width, this.height);    
                 this.redo_history.unshift(d);
 
-                this.ctx.clearRect(0,0,this.width,this.height);
+                this.ctx.clearRect(0, 0, this.width, this.height);
                 d = this.undo_history.shift();
                 this.ctx.putImageData(d, 0, 0);
             }
@@ -263,7 +263,8 @@
                 }
                 this.record_story.push([
                     time,
-                    this.last_x, this.last_y,
+                    this.last_x == undefined ? -1 : this.last_x, // -1 shorter than null
+                    this.last_y == undefined ? -1 : this.last_y,
                     x, y
                     ]);
             }
@@ -272,7 +273,7 @@
         },
 
         draw_raw: function (last_x, last_y, x, y, brush, width) {
-            if (last_x && last_y){
+            if (last_x >= 0 && last_y >= 0){
                 var dx = last_x - x,
                     dy = last_y - y,
                     d = Math.abs(dx) + Math.abs(dy),
@@ -284,7 +285,7 @@
                     (this[brush])(nx, ny, width);
                 }
             } else {
-                (this[brush])(nx, ny, width);
+                (this[brush])(x, y, width);
             }
         },
 

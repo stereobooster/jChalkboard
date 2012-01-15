@@ -72,6 +72,9 @@
                     e.stopPropagation();
                     that.mouse_down = 1;
                     that.save();
+                    var x = e.pageX - that.element.offsetLeft,
+                        y = e.pageY - that.element.offsetTop;
+                    that.draw(x,y);
                 }).bind("mouseleave", function () {
                     that.last_x = undefined;  
                     that.last_y = undefined;  

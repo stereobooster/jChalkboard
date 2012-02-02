@@ -49,7 +49,7 @@
             this.canvas_support_test();
 
             if (!this.canvas) {
-                this.element.addclass("no-canvas");
+                $(this.element).addClass("no-canvas");
             } else {
                 var that = this,
                     ctx = this.element.getContext("2d");
